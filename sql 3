@@ -1,0 +1,13 @@
+create table cds (
+	id serial primary key,
+	nome varchar(50) not null,
+	datacompra timestamp without time zone
+);
+
+create table musicas (
+	id serial primary key,
+	cd_id int references cds (id),
+	nome varchar(50) not null,
+	artista varchar(50),
+	tempomusica float
+);

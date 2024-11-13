@@ -1,0 +1,67 @@
+CREATE TABLE categoria (
+	id SERIAL PRIMARY KEY,
+	nome VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE produto (
+	id SERIAL PRIMARY KEY,
+	categoria_id INT REFERENCES categoria (id),
+	descricao VARCHAR(45) NOT NULL,
+	preco NUMERIC
+);
+
+CREATE TABLE cliente (
+	id SERIAL PRIMARY KEY,
+	nome VARCHAR(45) NOT NULL,
+	endereco VARCHAR(50),
+	telefone VARCHAR(20),
+	status VARCHAR(10),
+	limite_credito NUMERIC,
+	tipo_pessoa CHAR(1) -- Adicionado para identificar se o cliente é físico ou jurídico ('F' para Física, 'J' para Jurídica)
+);
+
+CREATE TABLE pedido (
+	id SERIAL PRIMARY KEY,
+	cliente_id INT REFERENCES cliente (id),
+	data TIMESTAMP WITHOUT TIME ZONE,
+	situacao VARCHAR(20) -- Adicionado para identificar a situação do pedido
+);
+
+CREATE TABLE item_pedido (
+	id SERIAL PRIMARY KEY,
+	produto_id INT REFERENCES produto (id),
+	pedido_id INT REFERENCES pedido (id),
+	quantidade INT,
+	valor_unitario NUMERIC
+);
+
+
+--  Inserções
+
+INSERT INTO categoria (nome) VALUES
+('Medicamentos'),
+('Cosméticos'),
+('Suplementos');
+
+INSERT INTO produto (categoria_id, descricao, preco) VALUES
+(1, 'Paracetamol', 5.50),
+(1, 'Ibuprofeno', 8.75),
+(2, 'Shampoo', 15.00),
+(3, 'Proteína Whey', 90.00);
+
+INSERT INTO cliente (nome, endereco, telefone, status, limite_credito, tipo_pessoa) VALUES
+('João Silva', 'Rua A, 123', '99999-9999', 'Ativo', 1000.00, 'F'),
+('Maria Souza', 'Avenida B, 456', '98888-8888', 'Ativo', 2000.00, 'F'),
+('Empresa X', 'Rua C, 789', '97777-7777', 'Ativo', 5000.00, 'J');
+
+
+INSERT INTO pedido (cliente_id, data, situacao) VALUES
+(1, NOW() - INTERVAL '5 days', 'Finalizado'),
+(2, NOW() - INTERVAL '10 days', 'Em Andamento'),
+(3, NOW() - INTERVAL '40 days', 'Cancelado');
+
+
+INSERT INTO item_pedido (produto_id, pedido_id, quantidade, valor_unitario) VALUES
+(1, 1, 2, 5.50),
+(2, 1, 1, 8.75),
+(3, 2, 3, 15.00);

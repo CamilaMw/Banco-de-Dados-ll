@@ -1,0 +1,550 @@
+-- SQL para verificação das resoluções da 1ª prova avaliativa.
+
+-- - QUESTÃO 1
+
+CREATE TABLE cliente (
+	id SERIAL PRIMARY KEY,
+	nome VARCHAR(45),
+	telefone VARCHAR(45),
+	renda DOUBLE PRECISION
+);
+
+CREATE TABLE pacote (
+	id SERIAL PRIMARY KEY,
+	nome VARCHAR(45),
+	vagas INT,
+	valor DOUBLE PRECISION,
+	saida TIMESTAMP,
+	chegada TIMESTAMP
+);
+
+CREATE TABLE contratacao (
+	id SERIAL PRIMARY KEY,
+	vagas_contratadas INT,
+	cliente_id INT,
+	pacote_id INT,
+	FOREIGN KEY(cliente_id) REFERENCES cliente(id),
+	FOREIGN KEY(pacote_id) REFERENCES pacote(id)
+	
+);
+
+CREATE TABLE cidade (
+	id SERIAL PRIMARY KEY, 
+	nome VARCHAR(45)
+);
+
+CREATE TABLE roteiro (
+	id SERIAL PRIMARY KEY,
+	dias INT,
+	pacote_id INT,
+	cidade_id INT,
+	FOREIGN KEY(pacote_id) REFERENCES pacote(id),
+	FOREIGN KEY(cidade_id) REFERENCES cidade(id)
+);
+
+-- Inserir dados na tabela cliente
+INSERT INTO cliente (nome, telefone, renda) VALUES
+('João da Silva', '(11) 98765-4321', 5000.00),
+('Carlos Silva', '(21) 91234-5678', 7000.00),
+('Fernanda Lima', '(31) 92345-6789', 6000.00);
+
+INSERT INTO cliente (nome, telefone, renda) VALUES
+('Maria de Souza', '(62) 98225-1066', 10000.00);
+
+SELECT * FROM cliente;
+
+-- Inserir dados na tabela pacote
+INSERT INTO pacote (nome, vagas, valor, saida, chegada) VALUES
+('Litoral Baiano', 20, 1500.00, '2024-09-01 08:00:00', '2024-09-10 18:00:00'),
+('Litoral Paulista', 15, 2000.00, '2024-10-05 09:00:00', '2024-10-12 17:00:00'),
+('Litoral Catarinense', 25, 1800.00, '2024-11-01 10:00:00', '2024-11-08 16:00:00');
+
+SELECT * FROM pacote;
+
+-- Inserir dados na tabela cidade
+INSERT INTO cidade (nome) VALUES
+-- 1 a 6 - Litoral Baiano
+('Salvador'),
+('Ilhéus'),
+('Porto Seguro'),
+('Trancoso'),
+('Arraial d`Ajuda'),
+('Morro de São Paulo'),
+-- 7 a 12 - Litoral Paulista
+('Santos'),
+('Guarujá'),
+('São Vicente'),
+('Praia Grande'),
+('Caraguatatuba'),
+('Ubatuba'),
+-- 13 a 18 - Litoral Catarinense
+('Florianópolis'),
+('Balneário Camboriú'),
+('Joinville'),
+('Itajaí'),
+('Bombinhas'),
+('São Francisco do Sul');
+
+
+SELECT * FROM cidade;
+
+INSERT INTO roteiro (dias, pacote_id, cidade_id) VALUES
+(4, 1, 5), 
+(7, 1, 2), 
+(10, 1, 3), 
+(2, 1, 1), 
+(9, 1, 6),
+(5, 1, 5), 
+(7, 2, 7), 
+(6, 2, 12), 
+(13, 2, 11), 
+(6, 2, 8), 
+(5, 2, 9),
+(3, 2, 10),
+(7, 3, 14), 
+(6, 3, 18), 
+(5, 3, 13), 
+(10, 3, 16), 
+(9, 3, 15),
+(7, 3, 17); 	
+
+INSERT INTO roteiro (dias, pacote_id, cidade_id) VALUES (9, 1, 4);
+
+
+SELECT * FROM roteiro;
+
+
+-- Inserir dados na tabela contratacao
+INSERT INTO contratacao (vagas_contratadas, cliente_id, pacote_id) VALUES
+(2, 1, 1),  
+(1, 2, 2),  
+(3, 3, 3); 
+
+-- 
+INSERT INTO contratacao (vagas_contratadas, cliente_id, pacote_id) VALUES (4, 1, 2);
+
+-- Inserindo 10 vagas para o cliente_id = 4 (Maria de Souza)
+INSERT INTO contratacao (vagas_contratadas, cliente_id, pacote_id) VALUES (5, 4, 2);
+INSERT INTO contratacao (vagas_contratadas, cliente_id, pacote_id) VALUES (2, 4, 1);
+INSERT INTO contratacao (vagas_contratadas, cliente_id, pacote_id) VALUES (3, 4, 3);
+
+SELECT * FROM contratacao;
+
+
+
+-- 1a) Dado o pacote “Litoral Baiano”, selecione todas as cidades distintas deste pacote
+
+SELECT DISTINCT cidade.nome
+FROM cidade
+INNER JOIN roteiro ON roteiro.cidade_id = cidade.id
+INNER JOIN pacote ON pacote.id = roteiro.pacote_id
+WHERE pacote.nome = 'Litoral Baiano';
+
+-- 1b) Selecione todas as cidades que “JOÃO DA SILVA” já visitou
+
+SELECT cidade.nome 
+FROM cidade
+INNER JOIN roteiro ON roteiro.cidade_id = cidade.id
+INNER JOIN pacote ON pacote.id = roteiro.pacote_id
+INNER JOIN contratacao ON contratacao.pacote_id = pacote.id
+INNER JOIN cliente ON cliente.id = contratacao.cliente_id
+WHERE cliente.nome = 'João da Silva';
+
+
+-- 1c) Selecione o total de pessoas que “MARIA DE SOUZA” já levou em algum pacote 
+-- (lembre-se de utilizar a cláusula GROUP BY)
+
+SELECT cliente.nome, SUM(contratacao.vagas_contratadas) AS vagas  
+FROM contratacao 
+INNER JOIN cliente ON cliente.id = contratacao.cliente_id 
+WHERE cliente.nome = 'Maria de Souza' 
+GROUP BY cliente.nome;
+
+
+SELECT cliente.nome, SUM(contratacao.vagas_contratadas) AS vagas  
+FROM cliente 
+INNER JOIN contratacao ON cliente.id = contratacao.cliente_id 
+WHERE cliente.nome = 'Maria de Souza' 
+GROUP BY cliente.nome;
+
+
+-- 1d) Selecione o total faturado pelo pacote “Litoral Baiano”. 
+
+SELECT SUM(contratacao.vagas_contratadas * pacote.valor) AS "Total Faturado"
+FROM contratacao
+INNER JOIN pacote ON pacote.id = contratacao.pacote_id
+WHERE pacote.nome = 'Litoral Baiano';
+
+
+-- QUESTÃO 2
+
+CREATE TABLE categoria (
+	id SERIAL PRIMARY KEY,
+	nome VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE produto (
+	id SERIAL PRIMARY KEY,
+	categoria_id INT REFERENCES categoria (id),
+	descricao VARCHAR(45) NOT NULL,
+	preco NUMERIC
+);
+
+CREATE TABLE cliente (
+	id SERIAL PRIMARY KEY,
+	nome VARCHAR(45) NOT NULL,
+	endereco VARCHAR(50),
+	telefone VARCHAR(20),
+	status VARCHAR(10),
+	limite_credito NUMERIC,
+	tipo_pessoa CHAR(1)
+);
+
+CREATE TABLE pedido (
+	id SERIAL PRIMARY KEY,
+	cliente_id INT REFERENCES cliente (id),
+	data TIMESTAMP WITHOUT TIME ZONE,
+	situacao VARCHAR(20) 
+);
+
+CREATE TABLE item_pedido (
+	id SERIAL PRIMARY KEY,
+	produto_id INT REFERENCES produto (id),
+	pedido_id INT REFERENCES pedido (id),
+	quantidade INT,
+	valor_unitario NUMERIC
+);
+
+--  Inserções
+
+INSERT INTO categoria (nome) VALUES
+('Medicamentos'),
+('Cosméticos'),
+('Suplementos');
+
+INSERT INTO produto (categoria_id, descricao, preco) VALUES
+(1, 'Paracetamol', 5.50),
+(1, 'Ibuprofeno', 8.75),
+(2, 'Shampoo', 15.00),
+(3, 'Proteína Whey', 90.00);
+
+INSERT INTO cliente (nome, endereco, telefone, status, limite_credito, tipo_pessoa) VALUES
+('João Silva', 'Rua A, 123', '99999-9999', 'Ativo', 1000.00, 'F'),
+('Maria Souza', 'Avenida B, 456', '98888-8888', 'Ativo', 2000.00, 'F'),
+('Empresa X', 'Rua C, 789', '97777-7777', 'Ativo', 5000.00, 'J');
+
+
+INSERT INTO pedido (cliente_id, data, situacao) VALUES
+(1, NOW() - INTERVAL '5 days', 'Finalizado'),
+(2, NOW() - INTERVAL '10 days', 'Em Andamento'),
+(3, NOW() - INTERVAL '40 days', 'Cancelado');
+
+
+INSERT INTO item_pedido (produto_id, pedido_id, quantidade, valor_unitario) VALUES
+(1, 1, 2, 5.50),
+(2, 1, 1, 8.75),
+(3, 2, 3, 15.00);
+
+-- 
+
+-- 1) Crie uma VIEW que liste os nomes de clientes que já adquiriram produtos
+-- e o nome dos produtos que ele já adquiriu. Classifique por nome do cliente e nome do
+-- produto.
+
+CREATE VIEW view_clientes_produtos AS
+SELECT 
+    cliente.nome AS nome_cliente,
+    produto.descricao AS nome_produto
+FROM 
+    cliente
+INNER JOIN 
+    pedido ON cliente.id = pedido.cliente_id
+INNER JOIN 
+    item_pedido ON pedido.id = item_pedido.pedido_id
+INNER JOIN 
+    produto ON item_pedido.produto_id = produto.id
+ORDER BY 
+    cliente.nome, produto.descricao;
+
+
+
+SELECT * FROM view_clientes_produtos;
+
+
+-- Explicação: Esta VIEW une as tabelas cliente, pedido, item_pedido e produto 
+-- para obter os nomes dos clientes e os nomes dos produtos que eles adquiriram. 
+-- Em seguida, classifica os resultados pelo nome do cliente e pelo nome do produto.
+
+
+-- 2b) Crie uma VIEW que liste os produtos que não foram adquiridos por nenhum cliente.
+
+-- Pensando na visão dos itens pedidos
+CREATE VIEW view_produtos_nao_adquiridos_usando_left_join AS
+SELECT 
+    produto.descricao AS nome_produto
+FROM 
+    produto
+LEFT JOIN 
+    item_pedido ON produto.id = item_pedido.produto_id
+WHERE 
+    item_pedido.produto_id IS NULL;
+
+SELECT * FROM view_produtos_nao_adquiridos;
+
+-- 2b) Crie uma VIEW que liste os produtos que não foram adquiridos por nenhum cliente.
+
+-- Pensando na visão dos clientes
+CREATE VIEW view_produtos_nao_adquiridos_usando_mais_lefts_joins AS
+SELECT 
+	produto.descricao as nome_produto
+FROM
+	produto
+LEFT JOIN 
+	item_pedido ON produto.id = item_pedido.produto_id
+LEFT JOIN
+	pedido ON pedido.id = item_pedido.pedido_id
+LEFT JOIN
+	cliente ON cliente.id = pedido.cliente_id
+WHERE
+	cliente.id IS NULL;
+
+SELECT * FROM view_produtos_nao_adquiridos_usando_mais_lefts_joins
+
+-- 2b) Crie uma VIEW que liste os produtos que não foram adquiridos por nenhum cliente.
+
+
+CREATE VIEW produtos_nao_adquiridos_usando_subconsulta AS
+SELECT 
+	produto.descricao
+FROM 
+    produto 
+WHERE 
+    produto.id NOT IN (
+        SELECT 
+            item_pedido.produto_id
+        FROM 
+            item_pedido 
+    );
+
+SELECT * FROM produtos_nao_adquiridos_usando_subconsulta;
+
+CREATE VIEW prod_nao_adq AS
+
+
+-- 2c) Crie uma VIEW que liste todos os pedidos dos últimos 30 dias (número, situação e data
+-- do pedido e, também, código, nome e quantidade adquirida dos produtos), não importando a data em que a consulta seja feita.
+
+CREATE VIEW view_pedidos_ultimos_30_dias AS
+SELECT 
+    pedido.id AS numero_pedido,
+    pedido.data AS data_pedido,
+	pedido.situacao AS situação,
+    produto.id AS codigo_produto,
+    produto.descricao AS nome_produto,
+    item_pedido.quantidade AS quantidade_adquirida
+FROM 
+    pedido
+INNER JOIN 
+    item_pedido ON pedido.id = item_pedido.pedido_id
+INNER JOIN 
+    produto ON item_pedido.produto_id = produto.id
+WHERE 
+    pedido.data >= NOW() - INTERVAL '30 days'
+ORDER BY 
+    pedido.data, pedido.id, produto.id;
+
+SELECT * FROM view_pedidos_ultimos_30_dias;
+
+-- Explicação: Esta VIEW une as tabelas pedido, item_pedido e produto para obter as informações necessárias e filtra os pedidos 
+-- realizados nos últimos 30 dias a partir da data atual (NOW()). A consulta é ordenada pela data do pedido, número do pedido
+-- e código do produto.
+
+
+-- QUESTÃO 3
+CREATE TABLE worker (
+	id SERIAL PRIMARY KEY,
+	name VARCHAR(100)
+);
+
+CREATE TABLE departments (
+	id SERIAL PRIMARY KEY,
+	name VARCHAR(100),
+	manager_id INT,
+	FOREIGN KEY(manager_id) REFERENCES worker(id)
+)
+
+
+INSERT INTO worker (name) VALUES ('Guilhermo Sparks');
+INSERT INTO worker (name) VALUES ('Gene Roberts');
+INSERT INTO worker (name) VALUES ('Ally Jones');
+INSERT INTO worker (name) VALUES ('Bryant Summers');
+INSERT INTO worker (name) VALUES ('Candice Green');
+
+INSERT INTO departments (name, manager_id) VALUES ('Financial', 3);  -- Ally Jones é gerente
+INSERT INTO departments (name, manager_id) VALUES ('Strategy', 5);  -- Candice Green é a gerente
+INSERT INTO departments (name, manager_id) VALUES ('IT', 1);  -- Guilhermo Sparks é o gerente
+INSERT INTO departments (name, manager_id) VALUES ('Marketing', NULL);  
+
+SELECT * FROM worker;
+SELECT * FROM departments;
+
+
+SELECT name 
+FROM worker 
+WHERE id NOT IN (
+    SELECT manager_id 
+    FROM departments 
+    WHERE manager_id IS NOT NULL
+);
+
+-- QUESTÃO 4
+CREATE TABLE orchestras (
+	id SERIAL PRIMARY KEY,
+	name VARCHAR(32),
+	rating DECIMAL,
+	city_origin VARCHAR(32),
+	country_origin VARCHAR(32),
+	year INT
+);
+
+CREATE TABLE concerts (
+	id SERIAL PRIMARY KEY,
+	city VARCHAR(64),
+	country VARCHAR(32),
+	year INT,
+	rating DECIMAL,
+	orchestra_id INT,
+	FOREIGN KEY(orchestra_id) REFERENCES orchestras(id)
+	
+);
+
+CREATE TABLE members (
+	id SERIAL PRIMARY KEY,
+	name VARCHAR(64),
+	position VARCHAR(32),
+	experience INT,
+	orchestra_id INT,
+	wage INT,
+	FOREIGN KEY(orchestra_id) REFERENCES orchestras(id)
+);
+
+-- INSERTS
+
+INSERT INTO orchestras (name, rating, city_origin, country_origin, year) 
+VALUES 
+('New York Symphony', 4.7, 'New York', 'USA', 2013),
+('London Philharmonic', 4.5, 'London', 'UK', 1932),
+('Berlin Staatskapelle', 4.8, 'Berlin', 'Germany', 1570),
+('Sydney Orchestra', 4.6, 'Sydney', 'Australia', 1946),
+('Tokyo Symphony', 4.4, 'Tokyo', 'Japan', 1949);
+
+INSERT INTO orchestras (name, rating, city_origin, country_origin, year)  
+	VALUES ('Splash Orchestra', 4.4, 'Porto', 'Portugal', 1949);
+
+INSERT INTO orchestras (name, rating, city_origin, country_origin, year) 
+VALUES ('Great Orchestra', 8.5, 'Los Angeles', 'USA', 2000);
+
+
+
+SELECT * FROM orchestras;
+
+INSERT INTO concerts (city, country, year, rating, orchestra_id) 
+VALUES 
+('New York', 'USA', 2023, 4.6, 1),  -- Concert by New York Symphony
+('London', 'UK', 2022, 4.5, 2),    -- Concert by London Philharmonic
+('Berlin', 'Germany', 2023, 8.2, 3), -- Concert by Berlin Staatskapelle
+('Sydney', 'Australia', 2023, 4.5, 4), -- Concert by Sydney Orchestra
+('Tokyo', 'Japan', 2022, 9, 2);    -- Concert by Tokyo Symphony
+
+INSERT INTO concerts (city, country, year, rating, orchestra_id) 
+	VALUES ('Porto', 'Portugal', 2013, 9.4, 1);    
+
+
+SELECT * FROM concerts;
+
+
+INSERT INTO members (name, position, experience, orchestra_id, wage) 
+VALUES 
+('John Smith', 'Conductor', 15, 1, 120000),
+('Emily Davis', 'Violinist', 8, 1, 80000),
+('Michael Brown', 'Cellist', 10, 2, 85000),
+('Sarah Wilson', 'Pianist', 12, 3, 90000),
+('Liam Johnson', 'Trumpet Player', 7, 4, 78000),
+('Olivia Martinez', 'Flutist', 9, 5, 82000);
+
+INSERT INTO members (name, position, experience, orchestra_id, wage) 
+VALUES ('Alice Johnson', 'Harpist', 12, 7, 95000);
+
+
+SELECT * FROM members;
+
+
+-- 4a)Selecione os nomes de todas as orquestras que tenham a mesma cidade de origem de qualquer cidade 
+-- em que alguma orquestra tenha se apresentado em 2013; 
+SELECT name 
+FROM orchestras
+WHERE city_origin IN (
+	SELECT city FROM concerts WHERE year = 2013
+);
+
+SELECT orchestras.name
+FROM orchestras 
+INNER JOIN concerts ON orchestras.city_origin = concerts.city
+WHERE concerts.year = 2013;
+
+
+
+-- Encontrar orquestras cuja cidade de origem tem um concerto em 2013:
+SELECT orchestras.name
+FROM orchestras 
+INNER JOIN concerts  ON orchestras.id = concerts.orchestra_id
+WHERE orchestras.city_origin = concerts.city AND orchestras.year = 2013;
+
+SELECT DISTINCT o.name
+FROM orchestras o
+INNER JOIN concerts c ON o.city_origin = c.city
+WHERE c.year = 2013;
+
+
+
+
+SELECT DISTINCT o.name
+FROM orchestras o
+INNER JOIN concerts c ON o.id = c.orchestra_id
+WHERE c.year = 2013;
+
+
+--  4b)	Selecione os nomes e as posições (ou seja, o instrumento tocado) de todos os membros da orquestra que 
+-- tenham mais de 10 anos de experiência e não pertençam a orquestras com classificação inferior a 8,0.
+SELECT name, position
+FROM members
+WHERE experience > 10 
+AND orchestra_id  NOT IN (
+		SELECT id FROM orchestras WHERE rating < 8.0
+);
+
+SELECT members.name, members.position
+FROM members
+INNER JOIN orchestras
+ON members.orchestra_id = orchestras.id
+WHERE members.experience > 10 AND orchestras.rating > 8;
+
+SELECT members.name, members.position
+FROM members
+WHERE members.experience > 10 and members.orchestra_id = 
+	(SELECT id FROM orchestras WHERE rating > 8.0);
+
+
+-- 4c) Mostre o nome e a posição dos membros da orquestra que ganham mais do que o salário 
+-- médio de todos os violinistas.
+
+SELECT name, position
+FROM members
+WHERE wage > (SELECT AVG(wage)
+              FROM members
+              WHERE position = 'Violinist');
+
+
+
+
+
